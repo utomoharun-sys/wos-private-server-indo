@@ -12,10 +12,10 @@ app.get('/api/player/profile', (req, res) => {
         playerId: "WOS-FREE-VIP12",
         playerName: "Developer Server",
         diamonds: 9999999,
-        vipLevel: 12, // Mengunci status ...
+        vipLevel: 12,
         allianceName: "Private Server Cre..."
     };
-
+console.log("-> Ada request masuk ke profil pemain tiruan")
     res.json(dataPemainTiruan);
 });
 
