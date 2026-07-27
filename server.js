@@ -20,7 +20,7 @@ app.get('/api/player/profile', (req, res) => {
 });
 
 // Menyalakan server lokal di laptop HP A...
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Server lokal WoS buatan ...`);
