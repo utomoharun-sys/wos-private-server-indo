@@ -1,4 +1,63 @@
-// Tampilan HTML Web Panel Admin Instan (Versi Aman untuk Render)
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Database sederhana di dalam memori
+const databasePemain = {};
+
+// Data Pengumuman Default
+let pengumumanServer = {
+    judul: "Selamat Datang di WOS Private Server!",
+    isi: "Nikmati fitur Free VIP 12, 99.999 Diamond, dan 999.999 Frost Star gratis untuk semua pemain baru!",
+    waktu: new Date().toLocaleString('id-ID')
+};
+
+// ==========================================
+// 1. ENDPOINT UNTUK GAME (CLIENT GAME WOS)
+// ==========================================
+
+// Endpoint Profil & Register Otomatis
+app.get('/api/player/profile', (req, res) => {
+    const playerId = req.query.id || "WOS-PLAYER-TEST";
+
+    if (!databasePemain[playerId]) {
+        databasePemain[playerId] = {
+            playerId: playerId,
+            playerName: `Pemain Baru ${Math.floor(1000 + Math.random() * 9000)}`,
+            diamonds: 99999,
+            frostStars: 999999,
+            vipLevel: 12,
+            allianceName: "Belum Ada Aliansi"
+        };
+        console.log(`[Database] Akun baru sultan dibuat: ${playerId}`);
+    }
+    return res.status(200).json(databasePemain[playerId]);
+});
+
+// Endpoint Top Up
+app.post('/api/player/topup', (req, res) => {
+    const { playerId, jenisItem, jumlahTopUp } = req.body;
+
+    if (!databasePemain[playerId]) {
+        return res.status(404).json({ error: "Akun tidak ditemukan!" });
+    }
+
+    if (jenisItem === "diamonds" || jenisItem === "frostStars") {
+        databasePemain[playerId][jenisItem] += parseInt(jumlahTopUp);
+        console.log(`[Database] Top up sukses untuk ${playerId}`);
+        return res.status(200).json({ message: "Top up sukses!", profile: databasePemain[playerId] });
+    } else {
+        return res.status(400).json({ error: "Jenis item tidak valid!" });
+    }
+});
+
+// ==========================================
+// 2. HALAMAN PANEL ADMIN Sederhana (WEB BROWSER)
+// ==========================================
+
 app.get('/admin', (req, res) => {
     res.send(`
     <!DOCTYPE html>
