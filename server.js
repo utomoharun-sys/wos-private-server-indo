@@ -1,65 +1,61 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
-
-// Middleware wajib agar bisa membaca data JSON dan menghindari blokir CORS
-app.use(cors());
-app.use(express.json()); 
-
-// Database sederhana di dalam memori (RAM) server
-const databasePemain = {};
-
-// 1. ENDPOINT PROFIL & PEMBUATAN AKUN OTOMATIS
-app.get('/api/player/profile', (req, res) => {
-    const playerId = req.query.id || "WOS-PLAYER-TEST";
-
-    console.log(`-> Request profil masuk untuk ID: ${playerId}`);
-
-    // Jika akun belum ada, otomatis buat baru dengan saldo melimpah
-    if (!databasePemain[playerId]) {
-        databasePemain[playerId] = {
-            playerId: playerId,
-            playerName: `Pemain Baru ${Math.floor(1000 + Math.random() * 9000)}`,
-            diamonds: 99999,      // Modal awal Diamond Gratis langsung 99.999
-            frostStars: 999999,   // Modal awal Frost Star langsung 999.999
-            vipLevel: 12,          // Langsung otomatis VIP 12
-            allianceName: "Belum Ada Aliansi"
-        };
-        console.log(`[Database] Akun baru sultan berhasil dibuat untuk ID: ${playerId}`);
-    }
-
-    // Kirim data akun ke aplikasi game
-    return res.status(200).json(databasePemain[playerId]);
-});
-
-// 2. ENDPOINT SIMULASI TOP UP (DIAMOND & FROST STAR)
-app.post('/api/player/topup', (req, res) => {
-    const { playerId, jenisItem, jumlahTopUp } = req.body; 
-    // jenisItem bisa berupa: "diamonds" atau "frostStars"
-
-    console.log(`-> Request Top Up ${jenisItem} masuk untuk ID: ${playerId} sebesar ${jumlahTopUp}`);
-
-    // Periksa apakah akun ada di database
-    if (!databasePemain[playerId]) {
-        return res.status(404).json({ error: "Akun tidak ditemukan!" });
-    }
-
-    // Validasi tipe item yang di-top up
-    if (jenisItem === "diamonds" || jenisItem === "frostStars") {
-        databasePemain[playerId][jenisItem] += parseInt(jumlahTopUp);
-        console.log(`[Database] Top up sukses! ${jenisItem} terbaru untuk ${databasePemain[playerId].playerName}: ${databasePemain[playerId][jenisItem]}`);
-        
-        return res.status(200).json({
-            message: `Top up ${jenisItem} berhasil!`,
-            profile: databasePemain[playerId]
-        });
-    } else {
-        return res.status(400).json({ error: "Jenis item tidak valid! Gunakan 'diamonds' atau 'frostStars'" });
-    }
+// Tampilan HTML Web Panel Admin Instan (Versi Aman untuk Render)
+app.get('/admin', (req, res) => {
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>WOS Admin Panel</title>
+        <style>
+            body { font-family: Arial; margin: 30px; background: #f4f6f9; }
+            .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .form-group { margin-bottom: 15px; }
+            label { display: block; font-weight: bold; margin-bottom: 5px; }
+            input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+            button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>👑 WOS Private Server Admin</h2>
+            <div class="form-group">
+                <label>ID Pemain (Player ID):</label>
+                <input type="text" id="targetPlayerId" value="WOS-PLAYER-TEST">
+            </div>
+            <div class="form-group">
+                <label>Jenis Item:</label>
+                <select id="itemType">
+                    <option value="diamonds">Diamonds</option>
+                    <option value="frostStars">Frost Stars</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Jumlah:</label>
+                <input type="text" id="topupAmount" value="50000">
+            </div>
+            <button onclick="sendTopUp()">Kirim Suntik Item</button>
+        </div>
+        <script>
+            function sendTopUp() {
+                const playerId = document.getElementById('targetPlayerId').value;
+                const jenisItem = document.getElementById('itemType').value;
+                const jumlahTopUp = document.getElementById('topupAmount').value;
+                fetch(window.location.origin + '/api/player/topup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerId, jenisItem, jumlahTopUp })
+                })
+                .then(res => res.json())
+                .then(data => alert(data.message || data.error));
+            }
+        </script>
+    </body>
+    </html>
+    `);
 });
 
 // Jalankan server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server game berjalan lancar di port ${PORT}`);
+    console.log(`Server WOS Pro berjalan di port ${PORT}`);
 });
